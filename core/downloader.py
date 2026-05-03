@@ -8,7 +8,7 @@ from typing import Optional
 from core.queue_manager import DownloadJob, FORMAT_STRINGS, QUALITY_FILTERS
 
 PROGRESS_RE = re.compile(
-    r'\[download\]\s+(\d+\.?\d*)%\s+of\s+~?[\d.]+\w+\s+at\s+([\d.]+\w+/s)\s+ETA\s+(\d+:\d+)'
+    r'\[download\]\s+(\d+\.?\d*)%\s+of\s+~?[\d.]+\s*\w+\s+at\s+([\d.]+\s*\w+/s)\s+ETA\s+([\d:]+)'
 )
 DEST_RE = re.compile(r'\[download\] Destination: (.+)')
 ALREADY_RE = re.compile(r'\[download\] (.+) has already been downloaded')
