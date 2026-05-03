@@ -24,8 +24,8 @@ class App(ctk.CTk):
         )
         self._ffmpeg_available = shutil.which("ffmpeg") is not None
 
-        self._build_ui()
         self._show_ffmpeg_warning_if_needed()
+        self._build_ui()
         self._start_poll()
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
@@ -66,6 +66,7 @@ class App(ctk.CTk):
                 text_color="orange",
                 font=ctk.CTkFont(size=11),
             )
+            # Pack banner before tabview so it isn't hidden by expand=True
             banner.pack(side="bottom", fill="x", padx=10, pady=(0, 4))
 
     def _start_poll(self) -> None:
