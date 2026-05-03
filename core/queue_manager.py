@@ -117,6 +117,11 @@ class QueueManager:
     def set_max_workers(self, n: int) -> None:
         self._max_workers = n
 
+    def shutdown(self) -> None:
+        self.stop_all()
+        if self._executor:
+            self._executor.shutdown(wait=False, cancel_futures=True)
+
     def _run_job(self, job: DownloadJob) -> None:
         from core.downloader import run_download
         run_download(job, self._ui_queue)

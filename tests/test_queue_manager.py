@@ -1,5 +1,6 @@
 import threading
-from core.queue_manager import DownloadJob, FORMAT_STRINGS, QUALITY_FILTERS
+import queue as queue_module
+from core.queue_manager import DownloadJob, FORMAT_STRINGS, QUALITY_FILTERS, QueueManager
 
 
 def test_download_job_defaults():
@@ -33,10 +34,6 @@ def test_all_expected_formats_present():
 def test_quality_filters_present():
     for q in ("best", "1080p", "720p", "480p", "audio"):
         assert q in QUALITY_FILTERS
-
-
-import queue as queue_module
-from core.queue_manager import QueueManager
 
 
 def test_add_jobs_creates_correct_count():
