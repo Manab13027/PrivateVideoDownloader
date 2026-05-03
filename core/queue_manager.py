@@ -8,27 +8,27 @@ from typing import Optional
 FORMAT_STRINGS: dict = {
     "mp4-h264": {
         "format": "bestvideo[ext=mp4][vcodec^=avc]+bestaudio[ext=m4a]/best[ext=mp4]",
-        "extra_args": [],
+        "extra_args": (),
         "needs_ffmpeg": True,
     },
     "mp4-h265": {
         "format": "bestvideo[ext=mp4][vcodec^=hev]+bestaudio[ext=m4a]/best[ext=mp4]",
-        "extra_args": [],
+        "extra_args": (),
         "needs_ffmpeg": True,
     },
     "webm": {
         "format": "bestvideo[ext=webm]+bestaudio[ext=webm]/best[ext=webm]",
-        "extra_args": [],
+        "extra_args": (),
         "needs_ffmpeg": False,
     },
     "mp3": {
         "format": "bestaudio/best",
-        "extra_args": ["--extract-audio", "--audio-format", "mp3"],
+        "extra_args": ("--extract-audio", "--audio-format", "mp3"),
         "needs_ffmpeg": True,
     },
     "mkv": {
         "format": "bestvideo+bestaudio/best",
-        "extra_args": ["--merge-output-format", "mkv"],
+        "extra_args": ("--merge-output-format", "mkv"),
         "needs_ffmpeg": True,
     },
 }
