@@ -1,6 +1,4 @@
 # main.py
-import sys
-
 def main():
     from ui.app import App
     app = App()
