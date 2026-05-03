@@ -26,7 +26,9 @@ class ProgressUpdate:
 
 
 def build_yt_dlp_command(job: DownloadJob) -> list[str]:
-    fmt_info = FORMAT_STRINGS[job.format]
+    fmt_info = FORMAT_STRINGS.get(job.format)
+    if fmt_info is None:
+        raise ValueError(f"Unknown format: {job.format!r}")
     base_format = fmt_info["format"]
     quality_filter = QUALITY_FILTERS.get(job.quality, "")
 
@@ -72,7 +74,11 @@ def run_download(job: DownloadJob, ui_queue: queue_module.Queue) -> None:
     job.progress = 0.0
     ui_queue.put(ProgressUpdate(job_id=job.job_id, progress=0.0, speed="", eta="", status="downloading"))
 
-    cmd = build_yt_dlp_command(job)
+    try:
+        cmd = build_yt_dlp_command(job)
+    except ValueError as e:
+        _fail(job, ui_queue, str(e))
+        return
 
     try:
         process = subprocess.Popen(

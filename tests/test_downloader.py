@@ -67,3 +67,68 @@ def test_parse_progress_line_valid():
 def test_parse_progress_line_invalid():
     assert parse_progress_line("[info] Downloading metadata") is None
     assert parse_progress_line("") is None
+
+import queue as queue_module
+from unittest.mock import patch, MagicMock
+
+def test_run_download_yt_dlp_not_found():
+    q = queue_module.Queue()
+    job = _make_job()
+    with patch("subprocess.Popen", side_effect=FileNotFoundError):
+        from core.downloader import run_download
+        run_download(job, q)
+    update = q.get_nowait()
+    # first update is "downloading"
+    update2 = q.get_nowait()
+    assert update2.status == "failed"
+    assert "yt-dlp" in update2.error.lower()
+
+def test_run_download_success():
+    q = queue_module.Queue()
+    job = _make_job()
+    mock_proc = MagicMock()
+    mock_proc.stdout = iter([
+        "[download] Destination: /tmp/videos/test.mp4\n",
+        "[download] 100% of  10.00MiB at    5.00MiB/s ETA 00:00\n",
+    ])
+    mock_proc.returncode = 0
+    mock_proc.wait.return_value = None
+    with patch("subprocess.Popen", return_value=mock_proc):
+        from core.downloader import run_download
+        run_download(job, q)
+    updates = []
+    while not q.empty():
+        updates.append(q.get_nowait())
+    done = [u for u in updates if u.status == "done"]
+    assert len(done) == 1
+    assert done[0].progress == 100.0
+    assert done[0].output_path == "/tmp/videos/test.mp4"
+
+def test_run_download_failure():
+    q = queue_module.Queue()
+    job = _make_job()
+    mock_proc = MagicMock()
+    mock_proc.stdout = iter(["ERROR: Video unavailable\n"])
+    mock_proc.returncode = 1
+    mock_proc.wait.return_value = None
+    with patch("subprocess.Popen", return_value=mock_proc):
+        from core.downloader import run_download
+        run_download(job, q)
+    updates = []
+    while not q.empty():
+        updates.append(q.get_nowait())
+    failed = [u for u in updates if u.status == "failed"]
+    assert len(failed) == 1
+    assert "unavailable" in failed[0].error.lower()
+
+def test_run_download_unknown_format():
+    q = queue_module.Queue()
+    job = _make_job(format="invalid-format")
+    from core.downloader import run_download
+    run_download(job, q)
+    updates = []
+    while not q.empty():
+        updates.append(q.get_nowait())
+    failed = [u for u in updates if u.status == "failed"]
+    assert len(failed) == 1
+    assert "invalid-format" in failed[0].error
