@@ -28,9 +28,12 @@ class SettingsManager:
                 pass
 
     def save(self) -> None:
-        self._path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self._path, "w") as f:
-            json.dump(self._data, f, indent=2)
+        try:
+            self._path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._path, "w") as f:
+                json.dump(self._data, f, indent=2)
+        except OSError:
+            pass
 
     def get(self, key: str):
         return self._data.get(key)
