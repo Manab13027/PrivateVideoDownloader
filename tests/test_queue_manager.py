@@ -33,3 +33,48 @@ def test_all_expected_formats_present():
 def test_quality_filters_present():
     for q in ("best", "1080p", "720p", "480p", "audio"):
         assert q in QUALITY_FILTERS
+
+
+import queue as queue_module
+from core.queue_manager import QueueManager
+
+
+def test_add_jobs_creates_correct_count():
+    q = queue_module.Queue()
+    mgr = QueueManager(ui_queue=q, max_workers=2)
+    urls = ["https://youtube.com/1", "https://youtube.com/2", "https://youtube.com/3"]
+    jobs = mgr.add_jobs(urls, format="mp4-h264", quality="best",
+                         cookies_path="/tmp/c.txt", output_dir="/tmp")
+    assert len(jobs) == 3
+    assert len(mgr.jobs) == 3
+
+def test_add_jobs_strips_whitespace():
+    q = queue_module.Queue()
+    mgr = QueueManager(ui_queue=q, max_workers=2)
+    jobs = mgr.add_jobs(["  https://youtube.com/1  ", ""], format="mp4-h264",
+                         quality="best", cookies_path="", output_dir="/tmp")
+    assert len(jobs) == 1
+    assert jobs[0].url == "https://youtube.com/1"
+
+def test_clear_done_removes_done_and_failed():
+    q = queue_module.Queue()
+    mgr = QueueManager(ui_queue=q, max_workers=2)
+    jobs = mgr.add_jobs(
+        ["https://a.com", "https://b.com", "https://c.com"],
+        format="mp4-h264", quality="best", cookies_path="", output_dir="/tmp"
+    )
+    jobs[0].status = "done"
+    jobs[1].status = "failed"
+    # jobs[2] stays "queued"
+    mgr.clear_done()
+    assert len(mgr.jobs) == 1
+    assert mgr.jobs[0].url == "https://c.com"
+
+def test_remove_job_by_id():
+    q = queue_module.Queue()
+    mgr = QueueManager(ui_queue=q, max_workers=2)
+    jobs = mgr.add_jobs(["https://a.com", "https://b.com"],
+                         format="mp4-h264", quality="best", cookies_path="", output_dir="/tmp")
+    mgr.remove_job(jobs[0].job_id)
+    assert len(mgr.jobs) == 1
+    assert mgr.jobs[0].url == "https://b.com"
