@@ -82,7 +82,8 @@ def run_download(job: DownloadJob, ui_queue: queue_module.Queue) -> None:
 
     try:
         process = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1,
+            env={**__import__("os").environ, "PYTHONUNBUFFERED": "1"},
         )
     except FileNotFoundError:
         _fail(job, ui_queue, "yt-dlp not found. Run: pip install yt-dlp")
@@ -91,34 +92,38 @@ def run_download(job: DownloadJob, ui_queue: queue_module.Queue) -> None:
     output_path = ""
     last_error_line = ""
 
-    for line in process.stdout:
-        if job.cancel_event.is_set():
-            process.terminate()
-            process.wait()
-            job.status = "queued"
-            job.progress = 0.0
-            job.cancel_event.clear()
-            ui_queue.put(ProgressUpdate(job_id=job.job_id, progress=0.0, speed="", eta="", status="queued"))
-            return
+    try:
+        for line in process.stdout:
+            if job.cancel_event.is_set():
+                process.terminate()
+                process.wait()
+                job.status = "queued"
+                job.progress = 0.0
+                job.cancel_event.clear()
+                ui_queue.put(ProgressUpdate(job_id=job.job_id, progress=0.0, speed="", eta="", status="queued"))
+                return
 
-        line = line.rstrip()
+            line = line.rstrip()
 
-        m_dest = DEST_RE.search(line)
-        if m_dest:
-            output_path = m_dest.group(1)
+            m_dest = DEST_RE.search(line)
+            if m_dest:
+                output_path = m_dest.group(1)
 
-        m_already = ALREADY_RE.search(line)
-        if m_already:
-            output_path = m_already.group(1)
+            m_already = ALREADY_RE.search(line)
+            if m_already:
+                output_path = m_already.group(1)
 
-        update = parse_progress_line(line)
-        if update:
-            update.job_id = job.job_id
-            ui_queue.put(update)
-        elif line and not line.startswith(("[download]", "[info]", "[youtube]")):
-            last_error_line = line
+            update = parse_progress_line(line)
+            if update:
+                update.job_id = job.job_id
+                ui_queue.put(update)
+            elif line and not line.startswith(("[download]", "[info]", "[youtube]", "WARNING")):
+                last_error_line = line
 
-    process.wait()
+        process.wait()
+    except Exception as e:
+        _fail(job, ui_queue, f"Unexpected error: {e}")
+        return
 
     if process.returncode == 0:
         job.status = "done"

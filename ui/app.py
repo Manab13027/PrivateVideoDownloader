@@ -76,14 +76,17 @@ class App(ctk.CTk):
         try:
             while True:
                 update = self.ui_queue.get_nowait()
-                self.queue_panel.apply_update(update)
-                if update.status == "done":
-                    job = next(
-                        (j for j in self.queue_manager.jobs if j.job_id == update.job_id),
-                        None,
-                    )
-                    if job:
-                        self.history_panel.add_entry(job)
+                try:
+                    self.queue_panel.apply_update(update)
+                    if update.status == "done":
+                        job = next(
+                            (j for j in self.queue_manager.jobs if j.job_id == update.job_id),
+                            None,
+                        )
+                        if job:
+                            self.history_panel.add_entry(job)
+                except Exception:
+                    pass
         except queue_module.Empty:
             pass
         self.after(100, self._poll_ui_queue)
