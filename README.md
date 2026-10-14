@@ -1,38 +1,22 @@
-# PrivateVideoDownloader
+# Private Video Downloader
 
-_TODO: one line on what this project does and who it's for._
+A **desktop video downloader** with a clean, modern GUI. Drag in a link (or
+paste it), pick quality, and download — powered by `yt-dlp` under the hood.
 
-**Stack:** Python
+## Features
+- Modern desktop UI (CustomTkinter)
+- **Drag-and-drop** link support (`tkinterdnd2`)
+- `yt-dlp` backend for site-aware, high-quality downloads
+- Clean separation of `core/` (download logic) and `ui/` (interface)
+
+## Stack
+Python · CustomTkinter · yt-dlp
 
 ## Getting started
-
 ```bash
 pip install -r requirements.txt
 python main.py
 ```
 
-## Dependencies
-
-- `customtkinter>=5.2.0`
-- `yt-dlp>=2024.1.0`
-- `tkinterdnd2>=0.3.0`
-- `pytest>=8.0.0`
-
-## Project structure
-
-```
-core/
-docs/
-main.py
-requirements.txt
-tests/
-ui/
-```
-
 ## Notes
-
-_TODO: anything a new user should know — configuration, env vars, known limitations._
-
----
-
-_README scaffolded by readme_gen. Edit the TODOs to finish it._
+- Only download content you have the right to download.
